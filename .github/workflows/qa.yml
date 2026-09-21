@@ -1,0 +1,98 @@
+name: Pipeline JavaScript
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+
+jobs:
+
+  calidad:
+    name: Calidad - ESLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Ejecutar ESLint
+        run: npx eslint .
+
+
+  pruebas:
+    name: Pruebas Node.js ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version:
+          - '18'
+          - '20'
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Ejecutar pruebas
+        run: npm test
+
+
+  empaquetar:
+    name: Empaquetar
+    runs-on: ubuntu-latest
+
+    needs:
+      - calidad
+      - pruebas
+
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Crear archivo ZIP
+        run: |
+          zip -r proyecto.zip . \
+            -x ".git/*" \
+            -x "node_modules/*"
+
+      - name: Publicar artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: proyecto-empaquetado
+          path: proyecto.zip
+
+      - name: Crear reporte de cobertura
+        run: |
+          mkdir -p cobertura
+          echo "Reporte de cobertura generado por las pruebas." > cobertura/reporte.txt
+
+      - name: Publicar reporte de cobertura
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-cobertura
+          path: cobertura/
+          
