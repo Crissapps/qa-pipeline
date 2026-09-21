@@ -1,0 +1,11 @@
+{
+  "name": "qa-pipeline",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "jest": "^30.0.0"
+  }
+}
